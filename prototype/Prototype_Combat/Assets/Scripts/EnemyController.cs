@@ -5,19 +5,23 @@ using UnityEngine;
 public class EnemyController : EntityController {
 
     public float radiusDetection = 15.0f;
-    public float radiusAttack = 5.0f;
 
     public GameObject lockedTarget;
+
+    public GameObject activeWeapon;
 
     private Animator animator;
 
 	// Use this for initialization
-	void Start () {
+	protected override void Start () {
+        base.Start();
         animator = GetComponent<Animator>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
+        if (!this.isAlive())
+            return;
         this.chaseAndAttack("Player");
 	}
 
@@ -28,26 +32,11 @@ public class EnemyController : EntityController {
         if (this.lockedTarget != null)
         {
             this.chase(this.lockedTarget);
-            if (this.canAttack(this.lockedTarget))
-            {
-                this.attack(this.lockedTarget);
-            } else if (animator != null)
-            {
-                animator.SetBool("Attack", false);
-            }
+            activeWeapon.GetComponent<WeaponController>().attack(this, this.lockedTarget);
         } else if (animator != null)
         {
             animator.SetBool("Chase", false);
         }
-    }
-
-    bool canAttack(GameObject target)
-    {
-        if (this.isTargetInRadius(target, this.radiusAttack)) // && l'animation d'attaque est finie
-        {
-            return true;
-        }
-        return false;
     }
 
     void chase(GameObject target)
@@ -56,16 +45,7 @@ public class EnemyController : EntityController {
         {
             animator.SetBool("Chase", true);
         }
-        // AI
-    }
-
-    void attack(GameObject target)
-    {
-        if (animator != null)
-        {
-            animator.SetBool("Attack", true);
-        }
-        target.GetComponent<EntityController>().takeDamage(this.getDamage());
+        this.transform.LookAt(target.transform);
     }
 
     GameObject getTargetToChase(string tag)
@@ -78,17 +58,6 @@ public class EnemyController : EntityController {
             toChase = player;
         }
         return toChase;
-    }
-
-    bool isTargetInRadius(GameObject target, float radius)
-    {
-        float distance = Vector3.Distance(target.transform.position, transform.position);
-
-        if (distance < radius)
-        {
-            return true;
-        }
-        return false;
     }
 
     List<GameObject> detectTargetsInRadius(string tag, float radius)

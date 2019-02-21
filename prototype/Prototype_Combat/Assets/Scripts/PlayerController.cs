@@ -11,6 +11,8 @@ public class PlayerController : EntityController {
     public int aimSize = 28;
     public int hudSize = 28;
 
+    public GameObject activeWeapon = null;
+
     private CharacterController characterController;
     private Camera characterCamera;
 
@@ -18,11 +20,10 @@ public class PlayerController : EntityController {
 
     private GUIStyle style = new GUIStyle();
 
-    public GameObject activeWeapon = null;
-
     // Use this for initialization
-    void Start()
+    protected override void Start()
     {
+        base.Start();
         characterController = GetComponent<CharacterController>();
         characterCamera = GameObject.FindObjectOfType<Camera>();
         style.normal.textColor = aimColor;
@@ -32,21 +33,49 @@ public class PlayerController : EntityController {
     // Update is called once per frame
     void Update()
     {
+        if (!this.isAlive())
+            return;
+
         this.move();
         this.displayEntityInfoAimed();
-        if (Input.GetMouseButtonDown(0) && this.activeWeapon != null)
+        if (Input.GetMouseButtonDown(0))
         {
-            if (activeWeapon.GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).IsName("Base"))
-            {
-                this.shoot();
-            }
-        } else if (this.activeWeapon != null && this.activeWeapon.GetComponent<Animator>() != null)
-        {
-            activeWeapon.GetComponent<Animator>().SetBool("Attack", false);
+            this.shoot();
         }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Application.Quit();
+        }
+    }
+
+    void OnGUI()
+    {
+        // Aim
+        string toDisplay = "+";
+        float posX = characterCamera.pixelWidth / 2 - aimSize / 4;
+        float posY = characterCamera.pixelHeight / 2 - aimSize / 2;
+        GUI.Label(new Rect(posX, posY, aimSize, aimSize), toDisplay, style);
+
+        // Health
+        toDisplay = this.getPseudo() + " - Level " + this.getLevel() + " - " + this.getHealth() + " HP";
+        posX = characterCamera.pixelWidth / 40;
+        posY = characterCamera.pixelHeight / 20;
+        GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
+
+        // Entity info
+        if (entityAimed != null)
+        {
+            toDisplay = entityAimed.getPseudo() + " - Level " + entityAimed.getLevel() + " - " + entityAimed.getHealth() + " HP";
+            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length / 2));
+            posY = characterCamera.pixelHeight - (hudSize / 2) - (characterCamera.pixelHeight / 20);
+            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
+        }
+        else
+        {
+            toDisplay = "";
+            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length / 2));
+            posY = characterCamera.pixelHeight - (hudSize / 2) - (characterCamera.pixelHeight / 20);
+            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
         }
     }
 
@@ -80,15 +109,7 @@ public class PlayerController : EntityController {
         GameObject entity = this.getGameObjectAimed();
         if (entity != null)
         {
-            EntityController target = entity.GetComponent<EntityController>();
-            if (target != null)
-            {
-                if (activeWeapon.GetComponent<Animator>() != null)
-                {
-                    activeWeapon.GetComponent<Animator>().SetBool("Attack", true);
-                }
-                target.takeDamage(this.getDamage());
-            }
+            activeWeapon.GetComponent<WeaponController>().attack(this, entity);
         }
     }
 
@@ -101,38 +122,6 @@ public class PlayerController : EntityController {
             return hit.transform.gameObject;
         }
         return null;
-    }
-
-    private IEnumerator ShotGen(Vector3 pos)
-    {
-        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        sphere.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
-        sphere.transform.position = pos;
-
-        yield return new WaitForSeconds(1);
-
-        Destroy(sphere);
-    }
-
-    void OnGUI()
-    {
-        float posX = characterCamera.pixelWidth / 2 - aimSize / 4;
-        float posY = characterCamera.pixelHeight / 2 - aimSize / 2;
-        GUI.Label(new Rect(posX, posY, aimSize, aimSize), "+", style);
-
-        if (entityAimed != null)
-        {
-            string toDisplay = entityAimed.getPseudo() + " - Level " + entityAimed.getLevel() + " - " + entityAimed.getHealth() + " HP";
-            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length /2 ));
-            posY = characterCamera.pixelHeight - hudSize / 2;
-            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
-        } else
-        {
-            string toDisplay = "";
-            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length / 2));
-            posY = characterCamera.pixelHeight - hudSize / 2;
-            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
-        }
     }
 
     void move()

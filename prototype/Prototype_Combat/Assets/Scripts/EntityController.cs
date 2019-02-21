@@ -10,7 +10,27 @@ public class EntityController : MonoBehaviour {
     private int damage = 5;
     private int health = 100;
 
-    void setDamage(int dmg)
+    private bool alive = true;
+
+    protected virtual void Start()
+    {
+        this.setHealth(this.baseHealth);
+        this.setDamage(this.baseDamage);
+    }
+
+    void Die()
+    {
+        GetComponent<Animator>().SetBool("Alive", false);
+        SoundManager.instance.PlaySingle(SoundManager.instance.efxSource, SoundManager.instance.effectGenericDeath);
+        this.alive = false;
+    }
+
+    public bool isAlive()
+    {
+        return this.alive;
+    }
+
+    public void setDamage(int dmg)
     {
         if (dmg >= 0)
         {
@@ -18,7 +38,7 @@ public class EntityController : MonoBehaviour {
         }
     }
 
-    void setLevel(int lvl)
+    public void setLevel(int lvl)
     {
         if (lvl >= 1)
         {
@@ -28,7 +48,7 @@ public class EntityController : MonoBehaviour {
         this.setDamage(this.baseDamage * this.level);
     }
 
-    void setHealth(int hp)
+    public void setHealth(int hp)
     {
         if (hp >= 0)
         {
@@ -59,10 +79,25 @@ public class EntityController : MonoBehaviour {
     public void takeDamage(int amount)
     {
         this.setHealth(this.health - amount);
+        if (this.getHealth() == 0)
+        {
+            this.Die();
+        }
     }
 
     public void nextLevel()
     {
         this.setLevel(this.level + 1);
+    }
+
+    public bool isTargetInRadius(GameObject target, float radius)
+    {
+        float distance = Vector3.Distance(target.transform.position, transform.position);
+
+        if (distance < radius)
+        {
+            return true;
+        }
+        return false;
     }
 }

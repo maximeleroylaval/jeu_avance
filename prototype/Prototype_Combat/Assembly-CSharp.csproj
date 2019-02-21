@@ -54,9 +54,13 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\CameraController.cs" />
+     <Compile Include="Assets\Scripts\CombatManager.cs" />
      <Compile Include="Assets\Scripts\EnemyController.cs" />
      <Compile Include="Assets\Scripts\EntityController.cs" />
      <Compile Include="Assets\Scripts\PlayerController.cs" />
+     <Compile Include="Assets\Scripts\SoundManager.cs" />
+     <Compile Include="Assets\Scripts\TriggerController.cs" />
+     <Compile Include="Assets\Scripts\WeaponController.cs" />
  <Reference Include="UnityEditor.StandardEvents">
  <HintPath>D:/Cours/jeu_avance/prototype/Prototype_Combat/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
  </Reference>
