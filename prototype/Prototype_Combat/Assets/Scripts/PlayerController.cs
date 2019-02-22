@@ -31,8 +31,9 @@ public class PlayerController : EntityController {
     }
 
     // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
+        base.Update();
         if (!this.isAlive())
             return;
 
@@ -51,32 +52,95 @@ public class PlayerController : EntityController {
     void OnGUI()
     {
         // Aim
-        string toDisplay = "+";
-        float posX = characterCamera.pixelWidth / 2 - aimSize / 4;
-        float posY = characterCamera.pixelHeight / 2 - aimSize / 2;
-        GUI.Label(new Rect(posX, posY, aimSize, aimSize), toDisplay, style);
+        if (!this.isDead())
+            this.displayGUI("+", characterCamera.pixelWidth / 2, characterCamera.pixelHeight / 2, aimSize, style, true);
+        else
+            this.resetGUI(characterCamera.pixelWidth / 2, characterCamera.pixelHeight / 2, aimSize, true);
 
-        // Health
-        toDisplay = this.getPseudo() + " - Level " + this.getLevel() + " - " + this.getHealth() + " HP";
-        posX = characterCamera.pixelWidth / 40;
-        posY = characterCamera.pixelHeight / 20;
-        GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
-
-        // Entity info
-        if (entityAimed != null)
+        // Player info
+        if (!this.isDead())
         {
-            toDisplay = entityAimed.getPseudo() + " - Level " + entityAimed.getLevel() + " - " + entityAimed.getHealth() + " HP";
-            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length / 2));
-            posY = characterCamera.pixelHeight - (hudSize / 2) - (characterCamera.pixelHeight / 20);
-            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
+            this.displayGUI(
+                this.getPseudo() + " - Level " + this.getLevel() + " - " + this.getHealth() + " HP",
+                characterCamera.pixelWidth / 40,
+                characterCamera.pixelHeight / 30,
+                hudSize,
+                style,
+                false
+            );
+        } else
+        {
+            this.resetGUI(
+                characterCamera.pixelWidth / 40,
+                characterCamera.pixelHeight / 30,
+                hudSize,
+                false
+            );
+        }
+
+        // Entity aimed info
+        if (entityAimed != null && !this.isDead())
+        {
+            this.displayGUI(
+                entityAimed.getPseudo() + " - Level " + entityAimed.getLevel() + " - " + entityAimed.getHealth() + " HP",
+                characterCamera.pixelWidth / 2,
+                characterCamera.pixelHeight,
+                hudSize,
+                style,
+                true
+            );
         }
         else
         {
-            toDisplay = "";
-            posX = characterCamera.pixelWidth / 2 - ((hudSize / 4) * (toDisplay.Length / 2));
-            posY = characterCamera.pixelHeight - (hudSize / 2) - (characterCamera.pixelHeight / 20);
-            GUI.Label(new Rect(posX, posY, hudSize, hudSize), toDisplay, style);
+            this.resetGUI(
+                characterCamera.pixelWidth / 2,
+                characterCamera.pixelHeight,
+                hudSize,
+                true
+            );
         }
+
+        // Dead message
+        if (this.isDead())
+        {
+            this.displayGUI(
+                "You are dead",
+                characterCamera.pixelWidth / 2,
+                characterCamera.pixelHeight / 2,
+                hudSize,
+                style,
+                true
+            );
+        } else
+        {
+            this.resetGUI(
+                characterCamera.pixelWidth / 2,
+                characterCamera.pixelHeight / 2,
+                hudSize,
+                true
+            );
+        }
+    }
+
+    public override void Die()
+    {
+        base.Die();
+        this.GetComponent<CameraController>().disable();
+    }
+
+    void resetGUI(float posX, float posY, float size, bool center)
+    {
+        this.displayGUI("", posX, posY, size, GUIStyle.none, center);
+    }
+
+    void displayGUI(string toDisplay, float posX, float posY, float size, GUIStyle style, bool center)
+    {
+        if (center)
+        {
+            posX = posX - ((size / 4) * (toDisplay.Length / 2));
+            posY = posY - (size / 2) - (characterCamera.pixelHeight / 20);
+        }
+        GUI.Label(new Rect(posX, posY, size, size), toDisplay, style);
     }
 
     void displayEntityInfo(EntityController entity)

@@ -10,8 +10,9 @@ public class WeaponController : EntityController {
     private bool lockFire = false;
 	
 	// Update is called once per frame
-	void Update () {
-		if (!this.isReady())
+	protected override void Update () {
+        base.Update();
+        if (!this.isReady())
         {
             this.resetAttack();
         }

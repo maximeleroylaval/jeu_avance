@@ -19,7 +19,8 @@ public class EnemyController : EntityController {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	protected override void Update () {
+        base.Update();
         if (!this.isAlive())
             return;
         this.chaseAndAttack("Player");
@@ -45,7 +46,9 @@ public class EnemyController : EntityController {
         {
             animator.SetBool("Chase", true);
         }
-        this.transform.LookAt(target.transform);
+        Vector3 lTargetDir = target.transform.position - transform.position;
+        lTargetDir.y = 0.0f;
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(lTargetDir), Time.time);
     }
 
     GameObject getTargetToChase(string tag)

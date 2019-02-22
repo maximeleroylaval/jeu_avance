@@ -9,6 +9,7 @@ public class SoundManager : MonoBehaviour
 
     public AudioClip ambientUnderWater;
     public AudioClip effectGenericDeath;
+    public AudioClip effectGenericExplode;
 
     void Awake()
     {

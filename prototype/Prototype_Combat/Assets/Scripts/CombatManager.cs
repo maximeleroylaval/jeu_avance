@@ -6,9 +6,12 @@ public class CombatManager : MonoBehaviour {
 
     public static CombatManager instance = null;
 
+    public ParticleSystem prefabDeathExplosion;
+
     public AudioClip epicBoss;
 
     public GameObject activeBoss;
+    public GameObject activePlayer;
 
     void Awake()
     {
@@ -37,13 +40,21 @@ public class CombatManager : MonoBehaviour {
             SoundManager.instance.StopMusic(SoundManager.instance.combatSource);
             activeBoss.GetComponent<EnemyController>().lockedTarget.GetComponent<EntityController>().nextLevel();
             activeBoss = null;
+        } else if (activePlayer && !activePlayer.GetComponent<EntityController>().isAlive())
+        {
+            SoundManager.instance.StopMusic(SoundManager.instance.combatSource);
+            activePlayer = null;
         }
 	}
 
     public void spawnBoss(GameObject player, GameObject prefabBoss, Vector3 spawnPosition)
     {
-        activeBoss = Instantiate(prefabBoss, spawnPosition, Quaternion.identity);
-        activeBoss.transform.LookAt(player.transform);
+        Vector3 lTargetDir = player.transform.position - transform.position;
+        lTargetDir.y = 0.0f;
+        Quaternion finalRotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(lTargetDir), Time.time);
+
+        activeBoss = Instantiate(prefabBoss, spawnPosition, finalRotation);
+        activePlayer = player;
 
         SoundManager.instance.PlayMusic(SoundManager.instance.combatSource, epicBoss);
     }

@@ -12,6 +12,8 @@ public class CameraController : MonoBehaviour {
 
     private float rotationX = 0;
 
+    private bool control = true;
+
     void rotateX()
     {
         transform.Rotate(0, Input.GetAxis("Mouse X") * sensHorizontal, 0);
@@ -28,7 +30,15 @@ public class CameraController : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+        if (!this.control)
+            return;
+
         this.rotateX();
         this.rotateY();
+    }
+
+    public void disable()
+    {
+        this.control = false;
     }
 }

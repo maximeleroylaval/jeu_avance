@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 
 public class EntityController : MonoBehaviour {
 
@@ -7,10 +9,14 @@ public class EntityController : MonoBehaviour {
     public int level = 1;
     public string pseudo = "entity";
 
+    private bool fade = false;
+    public float fadeSpeed = 10f;
+
     private int damage = 5;
     private int health = 100;
 
     private bool alive = true;
+    private bool dead = false;
 
     protected virtual void Start()
     {
@@ -18,11 +24,72 @@ public class EntityController : MonoBehaviour {
         this.setDamage(this.baseDamage);
     }
 
-    void Die()
+    protected virtual void Update()
     {
-        GetComponent<Animator>().SetBool("Alive", false);
+        if (this.fade)
+            this.fadeOut();
+    }
+
+    public void fadeOut()
+    {
+        SkinnedMeshRenderer render = gameObject.GetComponentInChildren<SkinnedMeshRenderer>();
+
+        if (render)
+        {
+            List<Material> materials = new List<Material>();
+            render.GetMaterials(materials);
+            foreach (Material material in materials)
+            {
+                var color = material.color;
+
+                material.color = new Color(
+                    color.r + (fadeSpeed * Time.deltaTime),
+                    color.g + (fadeSpeed * Time.deltaTime),
+                    color.b + (fadeSpeed * Time.deltaTime),
+                    1.0f
+                );
+            }
+            if (materials.Count <= 0)
+            {
+                render.enabled = false;
+            }
+        }
+        else
+        {
+            if (this.gameObject.tag != "Player")
+                this.gameObject.SetActive(false);
+        }
+    }
+
+    public float getParticleSystemDuration()
+    {
+        if (GetComponent<ParticleSystem>() != null)
+        {
+            var main = GetComponent<ParticleSystem>().main;
+            return main.duration;
+        }
+        return 0f;
+    }
+
+    public virtual IEnumerator deathExplode(float killTime, float explodeTime)
+    {
+        yield return new WaitForSeconds(killTime);
+        SoundManager.instance.PlaySingle(SoundManager.instance.efxSource, SoundManager.instance.effectGenericExplode);
+        this.fade = true;
+        yield return new WaitForSeconds(explodeTime);
+        ParticleSystem ps = Instantiate(CombatManager.instance.prefabDeathExplosion, this.transform.position, this.transform.rotation);
+        Destroy(ps, ps.main.duration);
+        this.dead = true;
+        if (this.tag != "Player")
+            Destroy(this.gameObject);
+    }
+
+    public virtual void Die()
+    {
         SoundManager.instance.PlaySingle(SoundManager.instance.efxSource, SoundManager.instance.effectGenericDeath);
+        GetComponent<Animator>().SetBool("Alive", false);
         this.alive = false;
+        StartCoroutine(deathExplode(SoundManager.instance.effectGenericDeath.length, 1.4f));
     }
 
     public bool isAlive()
@@ -30,11 +97,19 @@ public class EntityController : MonoBehaviour {
         return this.alive;
     }
 
+    public bool isDead()
+    {
+        return dead;
+    }
+
     public void setDamage(int dmg)
     {
         if (dmg >= 0)
         {
             damage = dmg;
+        } else
+        {
+            dmg = 0;
         }
     }
 
@@ -43,6 +118,9 @@ public class EntityController : MonoBehaviour {
         if (lvl >= 1)
         {
             this.level = lvl;
+        } else
+        {
+            this.level = 0;
         }
         this.setHealth(this.baseHealth * this.level);
         this.setDamage(this.baseDamage * this.level);
@@ -53,6 +131,9 @@ public class EntityController : MonoBehaviour {
         if (hp >= 0)
         {
             health = hp;
+        } else
+        {
+            health = 0;
         }
     }
 
